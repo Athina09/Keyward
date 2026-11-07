@@ -63,6 +63,8 @@ keyward token agent
 
 ## Using it from an agent
 
+Full walkthrough with a checklist: [docs/integration.md](docs/integration.md).
+
 ```python
 import httpx, os
 
