@@ -45,7 +45,7 @@ rather than for coding agents in a terminal.
 ## Quickstart (5 minutes)
 
 ```bash
-git clone <this repo> && cd keyward
+git clone https://github.com/Athina09/Keyward && cd Keyward
 pip install -e .               # Python 3.11+
 
 keyward init                   # create the encrypted vault (~/.keyward/vault.kw)
