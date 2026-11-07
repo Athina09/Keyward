@@ -1,0 +1,16 @@
+# secrets and runtime data — never commit
+vault.kw
+*.kw
+*.tmp
+.env
+receipts.jsonl
+budget.db
+*.db
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+FROZEN

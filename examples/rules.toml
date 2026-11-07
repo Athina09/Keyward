@@ -1,0 +1,70 @@
+# Keyward rules. Anything not described here is refused.
+# Copy to rules.toml (next to where you run `keyward serve`) or ~/.keyward/rules.toml.
+
+[broker]
+host = "127.0.0.1"        # local only; other values are refused
+port = 8787
+pass_ttl_max = 900        # longest a task pass may live (seconds)
+pass_uses_max = 50        # most calls a single pass may make
+
+# Who says YES. "terminal": you run `keyward approve CODE`.
+# "whatsapp": Keyward messages you and you reply "YES 123456".
+[approvals]
+channel = "terminal"
+timeout = 300             # seconds to wait for an answer
+
+# [approvals.whatsapp]
+# route = "whatsapp"                       # the route used to send you messages
+# path = "/v21.0/123456789012345/messages" # must be allowed by that route
+# owner = "919876543210"                   # your number, country code, digits only
+# app_secret = "WHATSAPP_APP_SECRET"       # vault name of the WhatsApp app secret
+
+# ---------------------------------------------------------------------------
+# AI provider (pick one)
+
+[routes.ai]
+upstream = "https://generativelanguage.googleapis.com"
+secret = "GEMINI_API_KEY"
+inject = { header = "x-goog-api-key", format = "{secret}" }
+allow = [{ method = "POST", path = "^/v1beta/models/[a-z0-9.-]+:generateContent$" }]
+limits = { per_minute = 15, per_day = 500 }
+
+# [routes.ai]
+# upstream = "https://api.anthropic.com"
+# secret = "ANTHROPIC_API_KEY"
+# inject = { header = "x-api-key", format = "{secret}" }
+# allow = [{ method = "POST", path = "^/v1/messages$" }]
+# limits = { per_minute = 30, per_day = 500 }
+
+# ---------------------------------------------------------------------------
+# WhatsApp Cloud API: send messages from one number only
+
+[routes.whatsapp]
+upstream = "https://graph.facebook.com"
+secret = "WHATSAPP_TOKEN"
+inject = { header = "Authorization", format = "Bearer {secret}" }
+allow = [{ method = "POST", path = "^/v[0-9.]+/123456789012345/messages$" }]
+limits = { per_minute = 20, per_day = 300 }
+
+# ---------------------------------------------------------------------------
+# Razorpay: create payment links only. No refunds, payouts or reading payments.
+# Amounts are in paise: 200000 = ₹2,000.
+
+[routes.razorpay]
+upstream = "https://api.razorpay.com"
+secret = "RAZORPAY_KEY"              # stored as key_id:key_secret
+inject = { header = "Authorization", format = "Basic {secret_base64}" }
+allow = [{ method = "POST", path = "^/v1/payment_links$" }]
+limits = { per_day = 10 }
+money = { field = "amount", currency = "INR", per_request = 200000, per_day = 300000, per_week = 500000, approve_over = 50000 }
+# approval = true                    # ask for EVERY payment instead of only those over approve_over
+
+# ---------------------------------------------------------------------------
+# Webhook signature checks: the agent asks "is this real?", Keyward answers yes/no.
+
+[verifiers.whatsapp]
+secret = "WHATSAPP_APP_SECRET"
+prefix = "sha256="
+
+[verifiers.razorpay]
+secret = "RAZORPAY_WEBHOOK_SECRET"
